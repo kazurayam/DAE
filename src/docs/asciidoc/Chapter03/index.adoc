@@ -118,6 +118,165 @@ image::vscode-asciidoc-security2.png[vscode]
 
 === 文書のファイル構成
 
-文書は次のようなファイル群で構成します。サンプル文書を元に、自分が執筆しようとする文書に合わせてカスタマイズしていくと良いでしょう。
+文書は次のようなファイル群で構成します。サンプル文書を元に、自分が執筆しようとする文書に合わせてカスタマイズしていくとよいでしょう。
+
+[source]
+[caption=""]
+.文書を構成するファイル
+----
+src/docs/asciidoc/index.adoc    # <1>
+src/docs/asciidoc/attribute.adoc    # <2>
+src/docs/asciidoc/@style/*.css    # <3>
+src/docs/asciidoc/@style/pdf-theme.yml    # <4>
+src/docs/asciidoc/@font/*    # <5>
+src/docs/asciidoc/Chapter{number}/index.adoc    # <6>
+----
+
+<1> 文書を作成する起点となるAsciidoc文書です。ここから他のAsciidoc文書を ``include`` することで大きな文書を構成していきます。
+<2>  文書全体に適用すべき設定を記述するためのファイルです。各文書はこれを ``include`` します。
+<3> HTML出力とプレビュー用のスタイルシートです。文書に合わせ修正してかまいません。。
+<4> PDF文書に変換する際に使われるスタイルシートです。文書に合わせて修正してかまいません。
+<5> PDF文書に埋め込みされるフォントファイルです。``pdf-theme.yml``から参照されます。 TrueTypeフォント ``.ttf`` が指定できます。
+<6> ``src/docs/asciidoc/index.adoc`` から参照される子文書です。``{number}``の部分は具体的には``01``、``02``、``03``です。
+
+``build.gradle``のなかでこれらのファイル構成を処理系に伝達するための設定をしています。
+
+[source]
+[caption=""]
+.build.gradle
+----
+asciidoctor {
+    asciidoctorj {
+        attributes 'stylesdir': '@style',
+            'stylesheet': 'asciidoctor.css'
+    }
+}
+
+asciidoctorPdf {
+    asciidoctorj {
+        attributes 'pdf-stylesdir': "@style",
+            'pdf-style': 'pdf'
+    }
+}
+----
+
+``src/docs/asciidoc/attribute.adoc`` ではエディタによるリアルタイム・プレビューで適用すべき属性を定義しておき、HTML/PDFを出力する際には``build.gradle``で属性を必要に応じて上書きするのが良いでしょう。
+
+Asciidoctorで利用可能な属性は次から参照できます。
+
+[quote, asciidoctor.org]
+----
+Attributes are one of the features that sets Asciidoctor apart from other lightweight markup languages. Attributes can activate features (behaviors, styles, integrations, etc) or hold replacement (i.e., variable) content.
+
+https://asciidoctor.org/docs/user-manual/#attributes
+----
+
+また、文書に挿入する画像ファイルは ``images`` というフォルダの中に配置することを想定しています。画像を格納するフォルダは下記の部分を書き替えることで変更可能です。
+
+[source]
+[caption=""]
+.src/docs/asciidoc/attribute.adoc
+----
+ifndef::imagesdir[:imagesdir: ./images]
+----
+
+[source]
+[caption=""]
+.builld.gradle
+----
+copy {
+    from 'src/docs/asciidoc/'
+    include 'Chapter*/mages/*'   // 子文書のフォルダ
+    into 'docs'
+}
+----
+
+``.adoc``ファイルの中から画像ファイルを参照する記述においては``.adoc`` ファイルを基底とする相対パスで画像ファイルをリンクします。
 
 
+
+
+
+==== 文書から文書への相互参照
+
+文書のなか参照リンクは次の様に記述します。
+
+[source]
+----
+<<_文書のファイル構成,章の冒頭>>   // <1>
+<<Chapter01/index.adoc#_はじめに,はじめに>>    // <2>
+----
+
+<1> 同じ `.adoc` のなかでの内部参照
+<2> `.adoc` を跨いだドキュメント間参照
+
+リンクの例
+
+* <<_文書のファイル構成,章の冒頭>> を参照してください・・・・
+* <<Chapter01/index.adoc#_はじめに,はじめに>> で述べたように・・・・
+
+
+
+=== asciidoctorj-diagram
+
+本変換ビルドスクリプトは `asciidoctorj-diagram` が有効になっており、いくつかのダイアグラム表記を使うことができます。
+
+==== PlantUML
+
+PlantUML形式のダイアグラムを `.svg` ベクトル画像に変換した上で文書に埋め込みます。
+
+[plantuml, diag-sequence-sample1, svg]
+----
+@startuml
+skinparam monochrome true
+ClassA -> ClassB: 日本語のテスト1
+ClassB -> ClassC: 日本語のテスト2
+ClassB <- ClassC: 日本語のテスト3
+ClassA <- ClassB: 日本語のテスト4
+@enduml
+----
+
+// Salt言語でGUIのモックアップをコードで記述し画像に変換することができる
+// https://plantuml.com/ja/salt
+[plantuml, diag-sequence-sample2, svg]
+----
+@startsalt
+{
+{T
++ アジア
+++ 日本
++++ 東京
++++ 大阪
+++ 中国
++++ 北京
++++ 上海
+++ ベトナム
++++ ホーチミン
++ ヨーロッパ
+++ イタリア
++++ ローマ
++++ ベネチア
+++ ドイツ
++++ ベルリン
++++ フランクフルト
++ アフリカ
+++ エジプト
+}
+}
+@endsalt
+----
+
+[plantuml, diag-sequence-sample3. svg]
+----
+@startsalt
+{
+ログイン <&person> | "MyName"
+パスワード <&key> | "****"
+[キャンセル <&circle-x>] | [OK <&account-login>]
+}
+@endsalt
+----
+
+---
+
+That's all. Happy coding!
