@@ -1,0 +1,123 @@
+include::../attribute.adoc[]
+
+== AsciidocからHTML/PD文書を作成する
+
+=== サンプル文書の変換を試す
+
+環境の準備ができましたので Asciidoc 文書を HTML/PDF に変換してみます。
+
+変換に使うスクリプトは github のリポジトリに公開されており、リポジトリには HTML/PDF 変換に使うファイル一色と、文書サンプルとして _この文書_ のAsciidocファイルが置かれています。まずはサンプル文書が正しく変換できるかを試してみましょう。
+
+macOS / Linux の場合は次のようにします。
+
+[source]
+[caption="手順."]
+.PDF 変換ビルドスクリプトを取得して実行する
+----
+$ curl -L -O https://github.com/kazurayam/DAE/archive/master.zip    # <1>
+$ unzip master.zip    # <2>
+$ cd DAE              # <3>
+$ ./gradlew docs      # <4>
+...
+BUILD SUCCESSFUL in 19s   # <5>
+2 actionable tasks: 2 executed
+----
+
+<1> リポジトリのファイルをダウンロードします。
+<2> ダウンロードした.zipファイルを展開します。
+<3> 展開してできたディレクトリのなかにcdします。
+<4> Gradleのビルドを実行します。初回実行時はビルドに必要なファイル群をダウンロードするため少し時間がかかります。次回からは数秒で完了します。
+<5> ``BUILD SUCCESSFUL`` が出力されればビルド成功です。
+
+<<<
+
+Windowsをお使いの場合に同等の操作をブラウザとエキスプローラーを使って行います。
+
+TODO
+
+
+
+// Sidebar
+.プロキシーサーバーの設定
+****
+もしお使いのコンピューターがプロキシーサーバーを経由してインターネットにアクセスする場合は、次のコマンドを ``./gradlew docs`` する前に投入してください。インターネットからライブラリをダウンロードして取得するのに必要です。ホスト名(``example.com``)とポート番号(``8080``)はそれぞれの環境に合うように変更してください。
+
+[source]
+[caption="手順."]
+.プロキシーサーバーの設定(Windows)
+----
+set JAVA_OPTS=-DproxyHost=example.com -DproxyPort=8080
+----
+
+[source]
+[caption="手順."]
+.プロキシーサーバーの設定(macOS / Linux)
+----
+export JAVA_OPTS=-DproxyHost=example.com -DproxyPort=8080
+----
+****
+
+<<<
+
+``./gradlew docs`` タスクが実行されて出力された文書は次の場所に格納されます。
+
+[source]
+----
+docs/index.html
+docs/index.pdf
+----
+
+``docs``フォルダはもっぱらビルドからの出力を格納するために使われ、ビルド開始時にいったん全てのファイルが削除されますから、ユーザは自作したファイルをここに配置しないよう注意してください。
+
+.PDF文書
+image::pdf.png[pdf, 520]
+
+.HTML文書
+image::html.png[html, 520]
+
+TIP: 文書を github 上に公開する場合は、プロジェクトのファイルを全てコミットし、GitHub Pages に ``docs`` フォルダを指定することで継続的に文書をパブリッシュすることができます。
+
+
+
+=== テキストエディタで Asciidoc 文書を編集する
+
+Visual Studio Codeを使ってAsciidoc文書（``\*.adoc``ファイル）をリアルタイムにプレビューしながら編集してみましょう。
+
+プロジェクトフォルダ(``DAE``)をVisual Studio Codeで開きましょう。``index.adoc``ファイルを開くとファイル拡張子`adoc`にたいしてこのプラグインを使うことを推奨しますというダイアログが表示されます。ダイアログにしたがってプラグインを導入しましょう。
+
+NOTE: どのプラグインを推奨するかは ``.vscode/extensions.json`` で設定されています。
+
+. btn:[すべてをインストール]ボタンをクリックします。
++
+image::vscode-extention1.png[vscode]
+
+. btn:[再読み込み]ボタンをクリックします。
++
+image::vscode-extention2.png[vscode]
++
+
+. Asciidoc文書(``src/docs/asciidoc/index.adoc``など)をVisual Studo Codeのエクスプローラーから選択して開き、文書を開いたエディタ部右上に配置された btn:[Open Preview to the Side] アイコンをクリックすると、画面右側に Asciidoc 文書の変換がリアルタイムに確認できるプレビューが表示されます。
++
+image::vscode-asciidoc.png[vscode, 600]
+
+<<<
+
+なお、もしリアルタイムプレビューでソースコードのハイライトが動作しない場合は、Asciidoc 文書を開いた状態で btn:[F1] を押し,
+menu:Change Preview Security Setting[Disable] を選択してください。
+
+image::vscode-asciidoc-security1.png[vscode]
+
+image::vscode-asciidoc-security2.png[vscode]
+
+[IMPORTANT]
+====
+本設定はプレビュー画面で動作するWebviewがインターネット上の外部リソースを評価できるようにセキュリティを下げる設定です。
+
+プロジェクトつまりファイルが配置されたフォルダ毎の設定となりますが、この設定をしたあとはこのプロジェクトで第三者の作成した未知の Asciidoc 文書を開かないようにしてください。外部から取り込んだ悪意のJavaScriptによセキュリティを侵害される可能性があります。この点、理解の上で設定してください。
+====
+
+=== 文書のファイル構成
+
+文書は次のようなファイル群で構成します。サンプル文書を元に、自分が執筆しようとする文書に合わせてカスタマイズしていくと良いでしょう。
+
+

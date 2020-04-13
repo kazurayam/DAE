@@ -1,0 +1,136 @@
+include::../attribute.adoc[]
+
+== Asciidoc 文書変換用スクリプトを使う準備をする
+
+本手順で用いる Asciidoc 文書変換用スクリプトはビルドツールである Gradle を活用しており、実行するためには Java 実行環境が必要です。
+
+NOTE: Java実行環境は、文書変換スクリプトを動作させる過程であなたが自分のコンピュータの OS 環境に手動で導入する必要がある唯一のプロダクトです。それ以外のものは Gradle によりプロジェクトとして独立した形で自動的に導入されます。
+
+あなたがお使いのコンピュータのコマンドライン環境（macOS/Linuxではターミナル 、Windowsではcmd.exeかpwsh.exe）で ``java -version`` コマンドを入力し、Java 8 以上のバージョンが表示されるようであれば既に準備は整っています。
+
+[source]
+[caption=""]
+.macOS/Linuxの場合
+----
+$ java -version
+openjdk version "1.8.0_242"
+OpenJDK Runtime Environment (AdoptOpenJDK)(build 1.8.0_242-b08)
+OpenJDK 64-Bit Server VM (AdoptOpenJDK)(build 25.242-b08, mixed mode)
+----
+
+[source]
+[caption=""]
+.Windowsの場合
+----
+C:\> java -version
+openjdk version "1.8.0_242"
+OpenJDK Runtime Environment (AdoptOpenJDK)(build 1.8.0_242-b08)
+OpenJDK 64-Bit Server VM (AdoptOpenJDK)(build 25.242-b08, mixed mode)
+----
+
+IMPORTANT: 現在 Java 9 以降の環境ではビルド時にワーニングが出力されるため本手順では Java 8 を使って解説しています。筆者の Java 11 環境で変換の動作は正しいことが確認できていますので適宜読み替えて Java を導入してください。この問題は将来解消されるでしょう。
+
+<<<
+
+===　Java 実行環境の導入(macOS / Linuxの場合)
+
+もしあなたの macOS / Linux 環境に Java 実行環境がなければ ``SDKMAN`` を利用することで、ターミナルから簡単に導入することができます。
+
+[quote, SDKMAN]
+----
+SDKMAN! is a tool for managing parallel versions of multiple Software Development Kits on most Unix bases systems.
+
+https://sdkman.io/
+----
+
+[source]
+[caption="手順."]
+.SDKMANを用いたJavaの導入
+----
+$ curl -s "https://get.sdkman.io" | bash       # <1>
+$ source "$HOME/.sdkman/bin/sdkman-init.sh"    # <2>
+$ sdk list java                                # <3>
+================================================================================
+Available Java Versions
+================================================================================
+ Vendor        | Use | Version      | Dist    | Status     | Identifier
+--------------------------------------------------------------------------------
+ AdoptOpenJDK  |     | 14.0.0.j9    | adpt    |            | 14.0.0.j9-adpt
+               |     | 14.0.0.hs    | adpt    |            | 14.0.0.hs-adpt
+               |     | 13.0.2.j9    | adpt    |            | 13.0.2.j9-adpt
+               |     | 13.0.2.hs    | adpt    |            | 13.0.2.hs-adpt
+               |     | 12.0.2.j9    | adpt    |            | 12.0.2.j9-adpt
+               |     | 12.0.2.hs    | adpt    |            | 12.0.2.hs-adpt
+               |     | 11.0.6.j9    | adpt    |            | 11.0.6.j9-adpt
+               |     | 11.0.6.hs    | adpt    |            | 11.0.6.hs-adpt
+               |     | 8.0.242.j9   | adpt    |            | 8.0.242.j9-adpt
+               |     | 8.0.242.hs   | adpt    |            | 8.0.242.hs-adpt
+ Azul Zulu     |     | 14.0.0       | zulu    |            | 14.0.0-zulu
+               |     | 13.0.2       | zulu    |            | 13.0.2-zulu
+               |     | 12.0.2       | zulu    |            | 12.0.2-zulu
+               |     | 11.0.6       | zulu    |            | 11.0.6-zulu
+               |     | 11.0.6.fx    | zulu    |            | 11.0.6.fx-zulu
+               |     | 10.0.2       | zulu    |            | 10.0.2-zulu
+               |     | 9.0.7        | zulu    |            | 9.0.7-zulu
+               |     | 8.0.242      | zulu    |            | 8.0.242-zulu
+               |     | 8.0.232.fx   | zulu    |            | 8.0.232.fx-zulu
+               |     | 8.0.202      | zulu    |            | 8.0.202-zulu
+               |     | 7.0.181      | zulu    |            | 7.0.181-zulu
+ ===============================================================================
+Use the Identifier for installation:
+
+    $ sdk install java 11.0.3.hs-adpt
+================================================================================
+$ sdk install java 8.0.242.hs-adpt          # <4>
+----
+
+<1> SDKMANを導入します。
+<2> SDKMANを起動するシェルスクリプト ``sdkman-init.sh`` を現在実行中のシェルにロードします。
+<3> 今現在導入可能なJavaのバージョンを一覧します。
+<4> 8.0系の最新バージョンを指定して Java を導入します。
+
+
+
+また、Gradle は ``JAVA_HOME`` 環境変数に実行環境の Java のパスが設定されていることを期待していますので、``.bash_profile`` で次のように ``JAVA_HOME`` を設定します。
+
+[source]
+[caption="手順. "]
+.JAVA_HOME の設定
+----
+$ vi ~/.bash_profile # <1>
+export JAVA_HOME=~/.sdkman/candidates/java/current # <2>
+$ source ~/.bash_profile # <3>
+----
+
+<1> vi エディタで ``.bash_profile`` を開きます。
+<2> 本ラインをファイルの最下部に追加し vi を保存終了します。
+<3> 設定を適用します。
+
+これで準備完了です。
+
+.SDKMAN について
+****
+SDKMAN は主に Java エコシステムの開発環境をコマンドラインから簡単に導入・設定するためにつくたれた管理ソフトウェアです。
+
+たとえば簡単に各種 Java のバージョンを導入し切り替えることができます。
+
+[source]
+[caption="手順. "]
+.SDKMAN による Java のバージョン切り替え
+----
+$ sdk install java 11.0.1-open # <1>
+$ sdk default java 11.0.1-open # <2>
+$ sdk default java 8.0.192-zulu # <3>
+----
+
+<1> Java 11 を導入
+<2> Java 11 をデフォルトに設定
+<3> Java 8 をデフォルトに設定
+****
+
+// 改ページ
+<<<
+
+=== Java 実行環境の導入（Windowsの場合）
+
+TODO
