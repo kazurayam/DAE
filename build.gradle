@@ -26,7 +26,8 @@ asciidoctor {
         }
     }
     asciidoctorj {
-        attributes 'styledir': '@style', 'stylesheet': 'asciidoctor.css'
+        attributes 'stylesdir': '@style',
+        'stylesheet': 'asciidoctor.css'
     }
 }
 
@@ -38,7 +39,8 @@ asciidoctorPdf {
         include 'index.adoc'
     }
     asciidoctorj {
-        attributes 'styledir': '@style', 'stylesheet': 'asciidoctor.css'
+        attributes 'pdf-stylesdir': '@style',
+        'pdf-style': 'pdf'
     }
 }
 
