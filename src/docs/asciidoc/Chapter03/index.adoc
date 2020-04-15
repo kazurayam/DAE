@@ -278,6 +278,76 @@ ClassA <- ClassB: 日本語のテスト4
 @endsalt
 ----
 
+[plantuml]
+----
+@startuml
+nwdiag {
+network dmz {
+address = "210.x.x.x/24"
+
+      web01 [address = "210.x.x.1"];
+      web02 [address = "210.x.x.2"];
+  }
+  network internal {
+      address = "172.x.x.x/24";
+
+      web01 [address = "172.x.x.1"];
+      web02 [address = "172.x.x.2"];
+      db01;
+      db02;
+  }
+}
+@enduml
+----
+
+[plantuml]
+----
+@startuml
+
+node "load balancer" as lb01
+
+node "web-server01" as web01 {
+    agent "apache2" as web01.apache2
+}
+node "web-server02" as web02 {
+    agent "apache2" as web02.apache2
+}
+node "web-server03" as web03 {
+    agent "apache2" as web03.apache2
+}
+
+node "db-server01" as db01 {
+    agent "mysql" as db01.mysql
+    agent "keepalived" as db01.keepalived
+
+    db01.keepalived -up-> db01.mysql
+}
+node "db-server02" as db02 {
+    agent "mysql" as db02.mysql
+    agent "keepalived" as db02.keepalived
+
+    db02.keepalived -up-> db02.mysql
+}
+
+lb01 ----> web01.apache2 :http
+lb01 ----> web02.apache2 :http
+lb01 ----> web03.apache2 :http
+
+web01.apache2 ----> db01.mysql
+web02.apache2 ----> db01.mysql
+web03.apache2 ----> db01.mysql
+
+web01.apache2 ....> db02.mysql
+web02.apache2 ....> db02.mysql
+web03.apache2 ....> db02.mysql
+
+db01.keepalived <-left-> db02.keepalived
+
+@end
+
+----
+
+
 ---
 
 That's all. Happy coding!
