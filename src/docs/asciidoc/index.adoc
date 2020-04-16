@@ -1,6 +1,6 @@
 include::./attribute.adoc[]
 
-= AsciidoctorとGradleで作る文書執筆環境
+= Document Authoring Environment
 http://github.com/kazurayam/DAE
 2020-04-13
 :Revision: 0.1.0
